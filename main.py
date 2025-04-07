@@ -110,20 +110,20 @@ class TurnstileTester:
             return {}
 
 
-    async def run_api_server(self, debug=False, headless=False, useragent=None, browser_type="chromium", thread=1) -> None:
-        """Run the API server with logging."""
-        logger.info("Starting API server on http://localhost:5000")
-        logger.info("API documentation available at http://localhost:5000/")
+    async def run_api_server(self, debug=False, headless=False, useragent=None, browser_type="chromium", thread=1, host="127.0.0.1", port=5000) -> None:
+    """Run the API server with logging."""
+    logger.info(f"Starting API server on http://{host}:{port}")
+    logger.info(f"API documentation available at http://{host}:{port}/")
 
-        try:
-            app = create_app(debug=debug, headless=headless, useragent=useragent, browser_type=browser_type, thread=thread)
-            import hypercorn.asyncio
-            config = hypercorn.Config()
-            config.bind = ["127.0.0.1:5000"]
-            await hypercorn.asyncio.serve(app, config)
-        except Exception as e:
-            logger.error(f"API server failed to start: {str(e)}")
-
+    try:
+        app = create_app(debug=debug, headless=headless, useragent=useragent, browser_type=browser_type, thread=thread)
+        import hypercorn.asyncio
+        config = hypercorn.Config()
+        config.bind = [f"{host}:{port}"]  # Use the host and port arguments here
+        await hypercorn.asyncio.serve(app, config)
+    except Exception as e:
+        logger.error(f"API server failed to start: {str(e)}")
+        
     async def main(self):
         """Main execution flow with proper logging."""
         logger.info("Turnstile: Welcome to Turnstile Solver Tester")
@@ -132,7 +132,15 @@ class TurnstileTester:
             mode, url, sitekey = self._get_user_input()
 
             if mode == 'api':
-                await self.run_api_server()
+                await self.run_api_server(
+                    debug=args.debug,
+                    headless=args.headless,
+                    useragent=args.useragent,
+                    browser_type=args.browser_type,
+                    thread=args.thread,
+                    host=args.host,
+                    port=args.port
+                )                
             else:
                 if not url or not sitekey:
                     logger.error("URL and sitekey are required")
